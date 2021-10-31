@@ -1,0 +1,7 @@
+dist/app.js
+dist/*.map
+node_modules
+queries.json
+.env
+src/server/queries.json
+*.log

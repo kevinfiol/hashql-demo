@@ -1,0 +1,27 @@
+{
+	"name": "hashql-demo",
+	"type": "module",
+	"scripts": {
+		"dev": "rollup -c -m -w",
+		"build": "rollup -c",
+		"migrate": "ley",
+		"hashql": "node ./src/server/hashql.js"
+	},
+	"dependencies": {
+		"@polka/parse": "^1.0.0-next.21",
+		"ey": "^0.9.1",
+		"hashql": "^0.1.0",
+		"mithril": "^2.0.4",
+		"postgres": "^2.0.0-beta.10"
+	},
+	"devDependencies": {
+		"@rollup/plugin-commonjs": "^21.0.1",
+		"@rollup/plugin-node-resolve": "^13.0.6",
+		"env-smart": "^2.2.3",
+		"ley": "^0.7.1",
+		"rollup": "^2.58.3",
+		"rollup-plugin-livereload": "^2.0.5",
+		"rollup-plugin-serve": "^1.1.0",
+		"rollup-plugin-terser": "^7.0.2"
+	}
+}
