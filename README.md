@@ -2,6 +2,8 @@
 
 A small demo of [HashQL](https://github.com/HashQL/HashQL).
 
+## Usage
+
 Run migrations first:
 
 ```bash

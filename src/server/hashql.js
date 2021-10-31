@@ -6,11 +6,9 @@ import HashQL from 'hashql/server.js';
 import { createRequire } from 'module';
 import config from '../../config.js';
 
-const DEV = config.mode;
+const DEV = config.mode == 'dev';
 const PORT = config.port;
 const require = createRequire(import.meta.url);
-
-if (DEV) console.log('Running HashQL serverin *DEV* mode.');
 
 const app = ey();
 const sql = postgres(config.postgres);
@@ -47,4 +45,5 @@ app.use(
 });
 
 http.createServer(app).listen(PORT);
+if (DEV) console.log('Running HashQL server in *DEV* mode.');
 console.log(`Listening on port: ${PORT}`);
