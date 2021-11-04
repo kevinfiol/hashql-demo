@@ -13,15 +13,7 @@ const require = createRequire(import.meta.url);
 const app = ey();
 const sql = postgres(config.postgres);
 const hql = HashQL(DEV ? x => x : require('./queries.json'), {
-    sql: (query, input, context) =>
-        sql.call(null, query, ...input),
-    node: (query, input, context) =>
-        eval(
-            query.slice(1).reduce(
-                (acc, x, i) => acc + JSON.stringify(input[i]) + x,
-                query[0]
-            )
-        )
+    sql: (query, input, context) => sql.call(null, query, ...input)
 });
 
 app.use(
@@ -38,7 +30,7 @@ app.use(
             res.end();
         })
         .catch((err) => {
-            console.log(err);
+            console.error(err);
             res.statusCode = err.statusCode
             res.end(err.message)
         });
