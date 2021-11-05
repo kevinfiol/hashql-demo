@@ -1,70 +1,95 @@
 import fs from 'fs';
 import crypto from 'crypto';
+import { resolve } from 'path';
 import { bundle, logSuccess, logError } from './bundle.js';
-import textReplace from 'esbuild-plugin-text-replace'
-
-// await esbuild.build(
-//     {
-//         entryPoints: ['./test-build-input'],
-//         outfile: 'test-build-out.js',
-//         plugins: [
-            
-//             textReplace(
-//                 {
-//                     include: /mypackage\/dist/loader\.js$\/,
-//                     pattern:[
-//                         ['const installRetry','let installRetry'],
-//                         [/const\s+{\s*textReplace\s*}\s*=\s*require\s*\(\s*'esbuild-plugin-text-replace'\s*\)\s*;/g , "'import textReplace from 'esbuild-plugin-text-replace'"]
-//                     ]
-//                 }
-//             )
-//         ],
-//     }
-// )
 
 const queries = {};
-
-function add(tag, query) {
-    const md5 = crypto
-        .createHash('md5')
-        .update(query.join())
-        .digest('hex');
-
-    tag in queries === false && (queries[tag] = {})
-    queries[tag][md5] = query
-
-    return md5
-}
 
 bundle({
     minify: true,
     plugins: [
-        {
-            name: 'hashql',
-            setup(build) {
-https://regex101.com/r/ah8hP3/1
-// \b(?:sql|bar)`[^`]*`
-https://github.com/acornjs/acorn
-                build.onLoad({ filter: /\.js$/ }, async ({ path }) => {
-                    const source = await fs.promises.readFile(path, 'utf8');
-                    let temp = '(' + [].concat(['sql']).join('|') + ')`';
-                    console.log(temp);
-                    const matchRegex = new RegExp('(' + [].concat(['sql']).join('|') + ')`', 'g');
-
-                    let contents = source.slice();
-                    contents = contents.replaceAll(matchRegex, (foo) => {
-                        console.log(foo);
-                        return 'foobar`';
-                    });
-
-                    return { contents };
-                });
-            }
-        }
+        HashQL(['sql'])
     ]
 })
-    .then(logSuccess)
-    .catch(e => {
-        logError(e);
-        process.exit(1);
-    });
+.then(() => {
+    // write queries
+    fs.writeFileSync(
+        resolve('src/server/queries.json'),
+        JSON.stringify(queries, null, 2)
+    );
+})
+.then(logSuccess)
+.catch(e => {
+    logError(e);
+    process.exit(1);
+});
+
+function HashQL(tags) {
+    if (!tags || tags.length < 1)
+        throw Error('You must provide template tags to the HashQL plugin.');
+
+    // https://regex101.com/r/ah8hP3/1
+    // \b(sql|node)(`[^`]*`)
+    const matchRegex = new RegExp('\\b(' + tags.join('|') + ')(`[^`]*`)', 'g');
+
+    function add(tag, query) {
+        const md5 = crypto
+            .createHash('md5')
+            .update(query.join())
+            .digest('hex');
+
+        tag in queries === false && (queries[tag] = {})
+        queries[tag][md5] = query
+
+        return md5
+    }
+
+    return {
+        name: 'hashql',
+        setup(build) {
+            build.onLoad({ filter: /\.js$/ }, async ({ path }) => {
+                let contents = await fs.promises.readFile(path, 'utf8');
+
+                let chunks = contents.slice();
+                const matches = [...chunks.matchAll(matchRegex)];
+
+                if (matches.length > 0) {
+                    let origLen = contents.length;
+                    let diff = 0; // used to re-align match indices after every change
+
+                    matches.forEach(match => {
+                        let taggedCall = match[0];
+                        let tag = match[1];
+                        let query = match[2].replace(/`/g, '');
+
+                        const index = match.index + diff;
+                        const callLen = taggedCall.length;
+
+                        const beg = contents.slice(0, index);
+                        const end = contents.slice(index + callLen);
+
+                        const queryParts = query.split('${');
+                        if (queryParts.length > 1) {
+                            query = queryParts.reduce((acc, cur) => {
+                                let temp = cur.split('}');
+                                if (temp.length == 1) return [...acc, cur];
+                                return [...acc, temp[1]];
+                            }, []);
+                        } else {
+                            query = [query];
+                        }
+
+                        const hash = add(tag, query);
+                        contents = beg + `sql\`${hash}\`` + end;
+
+                        if (contents.length !== origLen) {
+                            diff = contents.length - origLen;
+                        }
+                    })
+                }
+
+                return { contents };
+            });
+        }
+    }
+};

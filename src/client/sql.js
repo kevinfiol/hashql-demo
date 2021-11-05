@@ -10,8 +10,4 @@ const { sql } = HashQL('sql', query =>
     }).then(res => res.json())
 )
 
-sql`
-    halo 3
-`
-
 export default sql;
