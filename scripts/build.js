@@ -10,16 +10,13 @@ bundle({
     plugins: [
         HashQL(['sql'])
     ]
-})
-.then(() => {
+}).then(() => {
     // write queries
     fs.writeFileSync(
         resolve('src/server/queries.json'),
         JSON.stringify(queries, null, 2)
     );
-})
-.then(logSuccess)
-.catch(e => {
+}).then(logSuccess).catch(e => {
     logError(e);
     process.exit(1);
 });

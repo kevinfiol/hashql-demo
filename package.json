@@ -2,8 +2,8 @@
 	"name": "hashql-demo",
 	"type": "module",
 	"scripts": {
-		"dev": "rollup -c -m -w",
-		"build": "rollup -c",
+		"dev": "node ./scripts/dev.js",
+		"build": "node ./scripts/build.js",
 		"migrate": "ley",
 		"hashql": "node ./src/server/hashql.js"
 	},
