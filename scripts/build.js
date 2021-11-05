@@ -77,7 +77,7 @@ function HashQL(tags) {
                         }
 
                         const hash = add(tag, query);
-                        contents = beg + `sql\`${hash}\`` + end;
+                        contents = beg + `${tag}\`${hash}\`` + end;
 
                         if (contents.length !== origLen) {
                             diff = contents.length - origLen;
