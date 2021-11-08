@@ -4,7 +4,8 @@ import sql from './sql';
 let pokemans = []
 
 const getPokemons = async () => {
-    pokemans = await sql`select * from pokemon`;
+    let bar = 'pikachu';
+    pokemans = await sql`select * from pokemon where name = ${bar}`;
     console.log(pokemans);
 };
 

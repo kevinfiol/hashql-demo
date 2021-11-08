@@ -44,7 +44,7 @@ function HashQL(tags) {
     return {
         name: 'hashql',
         setup(build) {
-            build.onLoad({ filter: /\.js$/ }, async ({ path }) => {
+            build.onLoad({ filter: /\.(js|mjs|jsx|ts|tsx)$/ }, async ({ path }) => {
                 let contents = await fs.promises.readFile(path, 'utf8');
 
                 let chunks = contents.slice();
@@ -66,10 +66,12 @@ function HashQL(tags) {
                         const end = contents.slice(index + callLen);
 
                         const queryParts = query.split('${');
+                        const args = [];
                         if (queryParts.length > 1) {
                             query = queryParts.reduce((acc, cur) => {
                                 let temp = cur.split('}');
                                 if (temp.length == 1) return [...acc, cur];
+                                args.push(temp[0].trim());
                                 return [...acc, temp[1]];
                             }, []);
                         } else {
@@ -77,7 +79,9 @@ function HashQL(tags) {
                         }
 
                         const hash = add(tag, query);
-                        contents = beg + `${tag}\`${hash}\`` + end;
+                        contents = beg + `${tag}('${hash}'`;
+                        if (args.length > 0) contents += `,${args.join(',')}`;
+                        contents += ')' + end;
 
                         if (contents.length !== origLen) {
                             diff = contents.length - origLen;
